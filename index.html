@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="ar">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Leaflet</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+    />
+    <style>
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+      }
+      #map {
+        height: 100%;
+        width: 100%;
+        position: absolute;
+        top: 0;
+        left: 0;
+      }
+      .layer-control {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: white;
+        padding: 10px;
+        z-index: 1000;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+      }
+      .stats {
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        background: white;
+        padding: 10px;
+        z-index: 1000;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+      }
+      .btn {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        z-index: 1000;
+      }
+      .file-input-container {
+        position: absolute;
+        top: 60px;
+        left: 10px;
+        z-index: 1000;
+        width: 200px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container-fluid" style="padding: 0">
+      <div class="file-input-container">
+        <input
+          type="file"
+          class="form-control"
+          id="file-input"
+          accept=".geojson"
+        />
+      </div>
+      <button class="btn btn-primary" id="toggleButton">عرض الطبقات</button>
+      <div id="map"></div>
+      <div class="layer-control" id="layerControl" style="display: none">
+        <h5>الطبقات</h5>
+        <label
+          ><input type="checkbox" id="layer1" checked /> 106-بيشة والوسطى </label
+        ><br />
+        <label><input type="checkbox" id="layer2" checked /> 101-جيزان </label
+        ><br />
+        <label><input type="checkbox" id="layer3" checked /> 102-محايل </label
+        ><br />
+        <label><input type="checkbox" id="layer4" checked /> 103-خميس </label
+        ><br />
+      </div>
+      <div class="stats" id="stats">
+        <h5>إحصائيات الفروع</h5>
+        <p id="weakBranches">عدد الفروع الضعيفة: 0 (أقل من 20000)</p>
+        <p id="mediumBranches">
+          عدد الفروع المتوسطة: 0 (من 20000 إلى أقل من 40000)
+        </p>
+        <p id="highBranches">عدد الفروع العالية: 0 (40000 فأكثر)</p>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.0.7/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+      const map = L.map("map").setView(
+        [25.246004814726035, 43.592607006622394],
+        5
+      );
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+      }).addTo(map);
+
+      // لتخزين العلامات حسب المنطقة
+      const areaLayers = {
+        layer1: L.layerGroup(), // منطقة 106-بيشة والوسطى
+        layer2: L.layerGroup(), // منطقة 101-جيزان
+        layer3: L.layerGroup(), // منطقة 102-محايل
+        layer4: L.layerGroup(), // منطقة 103-خميس
+      };
+
+      document
+        .getElementById("file-input")
+        .addEventListener("change", handleFile, false);
+
+      function handleFile(event) {
+        const file = event.target.files[0];
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          const geojsonData = JSON.parse(e.target.result);
+          updateStatistics(geojsonData); // Update statistics when file is loaded
+        };
+        reader.readAsText(file);
+      }
+
+      function updateStatistics(geojsonData) {
+        let weakCount = 0;
+        let mediumCount = 0;
+        let highCount = 0;
+
+        L.geoJSON(geojsonData, {
+          pointToLayer: function (feature, latlng) {
+            const color = getColorBySales(feature.properties.sales);
+            const marker = L.circleMarker(latlng, {
+              radius: 8,
+              fillColor: color,
+              color: "#fff",
+              weight: 1,
+              opacity: 1,
+              fillOpacity: 0.8,
+            });
+
+            // Assign marker to appropriate area layer
+            if (feature.properties.area === "106-بيشةوالوسطى")
+              areaLayers.layer1.addLayer(marker);
+            else if (feature.properties.area === "101-جيزان")
+              areaLayers.layer2.addLayer(marker);
+            else if (feature.properties.area === "102-محايل")
+              areaLayers.layer3.addLayer(marker);
+            else if (feature.properties.area === "103-خميس")
+              areaLayers.layer4.addLayer(marker);
+
+            return marker;
+          },
+          onEachFeature: function (feature, layer) {
+            const popupContent = `
+                        <strong>الفرع:</strong> ${
+                          feature.properties.branch || "غير متوفر"
+                        }<br>
+                        <strong>المنطقة:</strong> ${
+                          feature.properties.area || "غير محددة"
+                        }<br>
+                        <strong>المبيعات:</strong> ${
+                          feature.properties.sales || "غير متوفرة"
+                        }
+                    `;
+            layer.bindPopup(popupContent);
+
+            const sales = feature.properties.sales;
+            if (sales < 20000) weakCount++;
+            else if (sales >= 20000 && sales < 40000) mediumCount++;
+            else if (sales >= 40000) highCount++;
+          },
+        }).addTo(map); // إضافة GeoJSON إلى الخريطة
+
+        // إضافة كل طبقة إلى الخريطة
+        for (const layer in areaLayers) {
+          areaLayers[layer].addTo(map);
+        }
+
+        const bounds = L.geoJSON(geojsonData).getBounds();
+        map.fitBounds(bounds);
+
+        updateStatsDisplay(weakCount, mediumCount, highCount); // Update display
+      }
+
+      function updateStatsDisplay(weakCount, mediumCount, highCount) {
+        document.getElementById(
+          "weakBranches"
+        ).textContent = `عدد الفروع الضعيفة: ${weakCount} (أقل من 20000)`;
+        document.getElementById(
+          "mediumBranches"
+        ).textContent = `عدد الفروع المتوسطة: ${mediumCount} (من 20000 إلى أقل من 40000)`;
+        document.getElementById(
+          "highBranches"
+        ).textContent = `عدد الفروع العالية: ${highCount} (40000 فأكثر)`;
+      }
+
+      function getColorBySales(sales) {
+        if (sales < 20000) return "blue";
+        if (sales >= 20000 && sales < 40000) return "green";
+        if (sales >= 40000) return "red";
+        return "grey";
+      }
+
+      document
+        .querySelectorAll('.layer-control input[type="checkbox"]')
+        .forEach((checkbox) => {
+          checkbox.addEventListener("change", function () {
+            const layerName = this.id;
+
+            if (this.checked) {
+              areaLayers[layerName].addTo(map); // Show markers for the selected area
+            } else {
+              map.removeLayer(areaLayers[layerName]); // Hide markers for the unselected area
+            }
+            // Update statistics after toggling layers
+            updateVisibleStatistics();
+          });
+        });
+
+      function updateVisibleStatistics() {
+        let weakCount = 0;
+        let mediumCount = 0;
+        let highCount = 0;
+
+        // Check each layer and count visible markers
+        Object.keys(areaLayers).forEach((layerName) => {
+          if (map.hasLayer(areaLayers[layerName])) {
+            areaLayers[layerName].eachLayer((marker) => {
+              const sales = marker.feature.properties.sales;
+              if (sales < 20000) weakCount++;
+              else if (sales >= 20000 && sales < 40000) mediumCount++;
+              else if (sales >= 40000) highCount++;
+            });
+          }
+        });
+
+        updateStatsDisplay(weakCount, mediumCount, highCount); // Update display with visible stats
+      }
+
+      document
+        .getElementById("toggleButton")
+        .addEventListener("click", function () {
+          const layerControl = document.getElementById("layerControl");
+          if (layerControl.style.display === "none") {
+            layerControl.style.display = "block";
+          } else {
+            layerControl.style.display = "none";
+          }
+        });
+    </script>
+  </body>
+</html>
