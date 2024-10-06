@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ar">
   <head>
@@ -10,52 +11,82 @@
       href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
     />
     <style>
-      html,
-      body {
-        height: 100%;
-        margin: 0;
-      }
-      #map {
-        height: 100%;
-        width: 100%;
-        position: absolute;
-        top: 0;
-        left: 0;
-      }
-      .layer-control {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        background: white;
-        padding: 10px;
-        z-index: 1000;
-        border: 1px solid #ccc;
-        border-radius: 5px;
-      }
-      .stats {
-        position: absolute;
-        bottom: 10px;
-        right: 10px;
-        background: white;
-        padding: 10px;
-        z-index: 1000;
-        border: 1px solid #ccc;
-        border-radius: 5px;
-      }
-      .btn {
-        position: absolute;
-        top: 10px;
-        left: 10px;
-        z-index: 1000;
-      }
-      .file-input-container {
-        position: absolute;
-        top: 60px;
-        left: 10px;
-        z-index: 1000;
-        width: 200px;
-      }
-    </style>
+        html,
+        body {
+          height: 100%;
+          margin: 0;
+        }
+        /* #map {
+          height: 100%;
+          width: 100%;
+          position: absolute;
+          top: 0;
+          left: 0;
+        } */
+        #map {
+  height: 100%;
+  width: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+        .layer-control {
+          position: absolute;
+          top: 10px;
+          right: 10px;
+          background: white;
+          padding: 10px;
+          z-index: 1000;
+          border: 1px solid #ccc;
+          border-radius: 5px;
+        }
+        .stats {
+          position: absolute;
+          bottom: 10px;
+          right: 10px;
+          background: white;
+          padding: 10px;
+          z-index: 1000;
+          border: 1px solid #ccc;
+          border-radius: 5px;
+        }
+        .color-legend {
+          position: absolute;
+          bottom: 10px;
+          left: 10px;
+          background: white;
+          padding: 10px;
+          z-index: 1000;
+          border: 1px solid #ccc;
+          border-radius: 5px;
+          line-height: 1.5;
+        }
+        .btn {
+          position: absolute;
+          top: 10px;
+          left: 10px;
+          z-index: 1000;
+        }
+        .file-input-container {
+          position: absolute;
+          top: 60px;
+          left: 10px;
+          z-index: 1000;
+          width: 200px;
+        }
+        .legend-item {
+          display: flex;
+          align-items: center;
+          margin-bottom: 5px;
+        }
+        .legend-color {
+          width: 20px;
+          height: 20px;
+          margin-right: 10px;
+          border: 1px solid #000;
+        }
+      </style>
   </head>
   <body>
     <div class="container-fluid" style="padding: 0">
@@ -88,6 +119,22 @@
           عدد الفروع المتوسطة: 0 (من 20000 إلى أقل من 40000)
         </p>
         <p id="highBranches">عدد الفروع العالية: 0 (40000 فأكثر)</p>
+      </div>
+    </div>
+    <div class="color-legend" id="colorLegend">
+        <h5>دليل الألوان</h5>
+        <div class="legend-item">
+          <div class="legend-color" style="background-color: blue;"></div>
+          <span>اللون الأزرق: الفروع الأقل مبيعاً (أقل من 20000 منتج)</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background-color: green;"></div>
+          <span>اللون الأخضر: الفروع ذات المبيعات المتوسطة (من 20000 إلى 40000 منتج)</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background-color: red;"></div>
+          <span>اللون الأحمر: الفروع الأعلى مبيعاً (أكثر من 40000 منتج)</span>
+        </div>
       </div>
     </div>
 
